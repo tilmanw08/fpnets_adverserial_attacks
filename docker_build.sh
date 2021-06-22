@@ -1,0 +1,1 @@
+docker build --no-cache --force-rm -t dl_workingdir_fp_nets . 
