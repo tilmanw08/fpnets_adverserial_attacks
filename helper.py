@@ -56,5 +56,6 @@ def get_parser():
     parser.add_argument(
         "--save-freq", "-s", default=100, type=int, metavar="N", help="save frequency"
     )
+    parser.add_argument("--device", type=int, default=None)
 
     return parser

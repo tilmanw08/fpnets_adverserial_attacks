@@ -1,16 +1,23 @@
+import os
 from autoattack import AutoAttack
 import torch
 
 from fp_net_after_jov.models import model_getter
+from DLBio.pt_training import set_device
 from TRADES import train_trades_cifar10
 import helper
 
 
 model_types = ["CifarJOVFPNet"]  # ["CifarResNet", "CifarPyrResNet", "CifarJOVFPNet"]
-Ns = [3, 5, 7]
+Ns = [5, 7]
 
 for model_type in model_types:
     for N in Ns:
+        parser = helper.get_parser()
+        options = parser.parse_args()
+        options.model_dir = f"./Experiments/CIFAR10/{model_type}_N{N}"
+        set_device(options.device)
+
         model = model_getter.get_model(
             model_type=model_type,
             input_dim=3,
@@ -20,14 +27,10 @@ for model_type in model_types:
             q=[2],
         )
 
-        parser = helper.get_parser()
-        args = parser.parse_args()
-        args.model_dir = f"./Experiments/CIFAR10/{model_type}_N{N}"
-
-        model = train_trades_cifar10.main(model, args)
+        model = train_trades_cifar10.main(model, options)
 
         _, test_loader = train_trades_cifar10.get_loader(
-            args, {"num_workers": 1, "pin_memory": True}
+            options, {"num_workers": 1, "pin_memory": True}
         )
         l = [x for (x, y) in test_loader]
         x_test = torch.cat(l, 0)
@@ -40,6 +43,6 @@ for model_type in model_types:
             norm="Linf",
             eps=8.0 / 255.0,
             version="standard",
-            log_path=args.model_dir + "/log_file_Linf.txt",
+            log_path=options.model_dir + "/log_file_Linf.txt",
         )
         x_adv = adversary_linf.run_standard_evaluation(x_test, y_test, bs=128)
